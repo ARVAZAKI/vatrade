@@ -102,4 +102,42 @@ export class AuthService {
     }
     return user;
   }
+
+  async googleLogin(req: any) {
+    if (!req.user) {
+      throw new UnauthorizedException('No user from Google');
+    }
+
+    const { email, firstName, lastName, picture } = req.user;
+
+    // Check if user exists
+    let user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      // Create new user from Google profile
+      user = this.userRepository.create({
+        name: `${firstName} ${lastName}`,
+        email,
+        password: '', // No password for OAuth users
+        type: 'free',
+        role: 'user',
+      });
+      await this.userRepository.save(user);
+    }
+
+    // Generate JWT token
+    const payload = { sub: user.id, email: user.email };
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        type: user.type,
+        role: user.role,
+      },
+    };
+  }
 }

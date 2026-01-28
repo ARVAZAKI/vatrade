@@ -3,7 +3,9 @@ import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import GoogleCallback from './pages/GoogleCallback'
 import ProtectedRoute from './components/ProtectedRoute'
+import PublicRoute from './components/PublicRoute'
 import { LanguageProvider } from './hooks/useLanguage'
 import { ThemeProvider } from './hooks/useTheme'
 
@@ -13,9 +15,22 @@ function App() {
       <LanguageProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/" element={
+              <PublicRoute>
+                <LandingPage />
+              </PublicRoute>
+            } />
+            <Route path="/login" element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } />
+            <Route path="/register" element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } />
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route
               path="/dashboard"
               element={

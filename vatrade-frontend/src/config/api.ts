@@ -4,5 +4,6 @@ export const config = {
   apiUrl: API_URL,
   endpoints: {
     health: `${API_URL}/health`,
+    googleAuth: `${API_URL}/auth/google`,
   },
 };

@@ -42,6 +42,8 @@ export const translations = {
       feature5Desc: 'Laporan detail performa trading dengan visualisasi yang mudah dipahami',
       feature6Title: 'Notifikasi Instan',
       feature6Desc: 'Dapatkan alert untuk setiap eksekusi trade dan event penting lainnya',
+      feature7Title: 'Smart Market Detection',
+      feature7Desc: 'Bot otomatis berhenti saat bear market dan mulai trading kembali saat bull market terdeteksi',
     },
     // How it works
     howItWorks: {
@@ -234,6 +236,8 @@ export const translations = {
       feature5Desc: 'Detailed trading performance reports with easy-to-understand visualizations',
       feature6Title: 'Instant Notifications',
       feature6Desc: 'Get alerts for every trade execution and other important events',
+      feature7Title: 'Smart Market Detection',
+      feature7Desc: 'Bot automatically stops during bear market and resumes trading when bull market is detected',
     },
     // How it works
     howItWorks: {

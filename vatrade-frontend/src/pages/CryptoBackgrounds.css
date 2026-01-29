@@ -1,0 +1,349 @@
+/* ========================
+   OPSI 1: Crypto Grid Pattern
+   Grid dengan efek glowing yang menyerupai trading chart
+   ======================== */
+.crypto-grid-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.crypto-grid-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(to right, rgba(16, 185, 129, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.crypto-grid-background::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  right: 10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  animation: pulseGlow 8s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* ========================
+   OPSI 2: Floating Crypto Icons
+   Icon cryptocurrency yang floating
+   ======================== */
+.crypto-icons-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.crypto-icons-background::before {
+  content: '₿';
+  position: absolute;
+  font-size: 200px;
+  color: var(--green-primary);
+  opacity: 0.03;
+  top: 10%;
+  right: 15%;
+  font-weight: bold;
+  animation: floatCrypto 20s ease-in-out infinite;
+  z-index: 0;
+}
+
+.crypto-icons-background::after {
+  content: 'Ξ';
+  position: absolute;
+  font-size: 180px;
+  color: var(--yellow-primary);
+  opacity: 0.03;
+  bottom: 15%;
+  left: 10%;
+  font-weight: bold;
+  animation: floatCrypto 18s ease-in-out infinite reverse;
+  z-index: 0;
+}
+
+/* ========================
+   OPSI 3: Chart Lines Pattern
+   Garis-garis menyerupai chart trading
+   ======================== */
+.chart-lines-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-lines-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, transparent 0%, transparent 48%, var(--green-primary) 48%, var(--green-primary) 52%, transparent 52%, transparent 100%),
+    linear-gradient(45deg, transparent 0%, transparent 48%, var(--yellow-primary) 48%, var(--yellow-primary) 52%, transparent 52%, transparent 100%);
+  background-size: 100px 100px;
+  opacity: 0.05;
+  animation: chartMove 30s linear infinite;
+  z-index: 0;
+}
+
+.chart-lines-background::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+  animation: pulseGlow 10s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* ========================
+   OPSI 4: Hexagonal Crypto Pattern
+   Pattern hexagonal untuk tema crypto modern
+   ======================== */
+.hexagonal-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.hexagonal-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: 
+    linear-gradient(120deg, transparent 25%, var(--green-primary) 25%, var(--green-primary) 75%, transparent 75%),
+    linear-gradient(240deg, transparent 25%, var(--green-primary) 25%, var(--green-primary) 75%, transparent 75%);
+  background-size: 60px 104px;
+  opacity: 0.03;
+  animation: hexagonSpin 40s linear infinite;
+  z-index: 0;
+}
+
+.hexagonal-background::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -5%;
+  width: 400px;
+  height: 400px;
+  background: 
+    linear-gradient(120deg, transparent 25%, var(--yellow-primary) 25%, var(--yellow-primary) 75%, transparent 75%),
+    linear-gradient(240deg, transparent 25%, var(--yellow-primary) 25%, var(--yellow-primary) 75%, transparent 75%);
+  background-size: 50px 87px;
+  opacity: 0.03;
+  animation: hexagonSpin 35s linear infinite reverse;
+  z-index: 0;
+}
+
+/* ========================
+   OPSI 5: Candlestick Pattern
+   Pattern menyerupai candlestick trading chart
+   ======================== */
+.candlestick-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.candlestick-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      var(--green-primary) 40px,
+      var(--green-primary) 42px,
+      transparent 42px,
+      transparent 50px,
+      rgba(239, 68, 68, 0.5) 50px,
+      rgba(239, 68, 68, 0.5) 52px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 98px,
+      rgba(16, 185, 129, 0.1) 98px,
+      rgba(16, 185, 129, 0.1) 100px
+    );
+  opacity: 0.15;
+  animation: candlestickSlide 40s linear infinite;
+  z-index: 0;
+}
+
+.candlestick-background::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 600px;
+  height: 300px;
+  background: linear-gradient(to top, rgba(16, 185, 129, 0.08) 0%, transparent 100%);
+  animation: pulseGlow 12s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* ========================
+   OPSI 6: Binary Matrix Rain (Crypto Theme)
+   Efek matrix dengan angka binary untuk tema tech/crypto
+   ======================== */
+.matrix-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.matrix-background::before {
+  content: '0 1 0 1 1 0 1 0 1 0 1 1 0 0 1 1 0 1 0 1 0 1 1 0';
+  position: absolute;
+  top: -20%;
+  right: 10%;
+  font-size: 16px;
+  font-family: monospace;
+  color: var(--green-primary);
+  opacity: 0.1;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-width: 200px;
+  animation: matrixFall 20s linear infinite;
+  z-index: 0;
+}
+
+.matrix-background::after {
+  content: '₿ Ξ ₮ ₳ ◎ ₿ Ξ ₮ ₳ ◎';
+  position: absolute;
+  bottom: -10%;
+  left: 15%;
+  font-size: 24px;
+  color: var(--yellow-primary);
+  opacity: 0.08;
+  letter-spacing: 40px;
+  animation: matrixFall 25s linear infinite reverse;
+  z-index: 0;
+}
+
+/* ========================
+   Animations untuk Crypto Backgrounds
+   ======================== */
+@keyframes pulseGlow {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+@keyframes floatCrypto {
+  0%, 100% { 
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% { 
+    transform: translate(20px, -30px) rotate(5deg);
+  }
+  50% { 
+    transform: translate(-15px, -50px) rotate(-3deg);
+  }
+  75% { 
+    transform: translate(-30px, -20px) rotate(7deg);
+  }
+}
+
+@keyframes chartMove {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100px 100px;
+  }
+}
+
+@keyframes hexagonSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes candlestickSlide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100px);
+  }
+}
+
+@keyframes matrixFall {
+  0% {
+    transform: translateY(-20%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.1;
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateY(120%);
+    opacity: 0;
+  }
+}
+
+/* ========================
+   Dark Theme Adjustments
+   ======================== */
+[data-theme="dark"] .crypto-grid-background::before {
+  background-image: 
+    linear-gradient(to right, rgba(16, 185, 129, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16, 185, 129, 0.15) 1px, transparent 1px);
+  opacity: 0.4;
+}
+
+[data-theme="dark"] .crypto-grid-background::after {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .crypto-icons-background::before,
+[data-theme="dark"] .crypto-icons-background::after {
+  opacity: 0.05;
+}
+
+[data-theme="dark"] .chart-lines-background::before {
+  opacity: 0.08;
+}
+
+[data-theme="dark"] .hexagonal-background::before,
+[data-theme="dark"] .hexagonal-background::after {
+  opacity: 0.05;
+}
+
+[data-theme="dark"] .candlestick-background::before {
+  opacity: 0.2;
+}
+
+[data-theme="dark"] .matrix-background::before,
+[data-theme="dark"] .matrix-background::after {
+  opacity: 0.15;
+}

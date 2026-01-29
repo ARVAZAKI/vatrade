@@ -98,11 +98,11 @@ const LandingPage = () => {
                 <div className="card-stats">
                   <div className="stat">
                     <span className="stat-label">{t.hero.profitToday}</span>
-                    <span className="stat-value positive">+2.45%</span>
+                    <span className="stat-value positive">+12.45%</span>
                   </div>
                   <div className="stat">
                     <span className="stat-label">{t.hero.totalTrades}</span>
-                    <span className="stat-value">156</span>
+                    <span className="stat-value">4</span>
                   </div>
                 </div>
                 <div className="chart-placeholder">
@@ -113,11 +113,7 @@ const LandingPage = () => {
           </div>
         </div>
         
-        <div className="hero-decoration">
-          <div className="circle circle-1"></div>
-          <div className="circle circle-2"></div>
-          <div className="circle circle-3"></div>
-        </div>
+        <div className="hero-decoration"></div>
       </section>
 
       {/* Features Section */}
@@ -125,8 +121,6 @@ const LandingPage = () => {
         <div className="container">
           <div className="section-header animate-on-scroll">
             <span className="section-badge">{t.features.badge}</span>
-            <h2 className="section-title">{t.features.title}<br />{t.features.subtitle}</h2>
-            <p className="section-desc">{t.features.description}</p>
           </div>
           
           <div className="features-grid">
@@ -165,6 +159,12 @@ const LandingPage = () => {
               <h3>{t.features.feature6Title}</h3>
               <p>{t.features.feature6Desc}</p>
             </div>
+            
+            <div className="feature-card animate-on-scroll delay-6">
+              <div className="feature-icon icon-green">🎯</div>
+              <h3>{t.features.feature7Title}</h3>
+              <p>{t.features.feature7Desc}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -174,8 +174,6 @@ const LandingPage = () => {
         <div className="container">
           <div className="section-header animate-on-scroll">
             <span className="section-badge">{t.howItWorks.badge}</span>
-            <h2 className="section-title">{t.howItWorks.title}</h2>
-            <p className="section-desc">{t.howItWorks.description}</p>
           </div>
           
           <div className="steps-container">

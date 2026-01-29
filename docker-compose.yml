@@ -62,5 +62,45 @@ services:
       - backend
     command: npm run dev -- --host
 
+  redis:
+    image: redis:7-alpine
+    container_name: vatrade-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  engine:
+    build:
+      context: ./vatrade-engine
+      dockerfile: Dockerfile
+    container_name: vatrade-engine
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      DEBUG: "True"
+      BACKEND_URL: http://backend:3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vatrade
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./vatrade-engine:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
 volumes:
   postgres_data:
+  redis_data:

@@ -3,6 +3,9 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/auth.service';
+import binanceService from '../services/binance.service';
+import type { BinanceBalance } from '../services/binance.service';
+import { credentialService } from '../services/credential.service';
 import CredentialPage from './Credential';
 import ProfilePage from './Profile';
 import './Dashboard.css';
@@ -15,6 +18,12 @@ const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [profileOpen, setProfileOpen] = useState(false);
+  
+  // Binance data states
+  const [binanceBalance, setBinanceBalance] = useState<BinanceBalance | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+  const [balanceError, setBalanceError] = useState('');
+  const [userCredentialId, setUserCredentialId] = useState<string | null>(null);
 
   // Handle responsive sidebar on window resize
   useEffect(() => {
@@ -29,6 +38,69 @@ const Dashboard = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Load user credential and balance on mount
+  useEffect(() => {
+    const loadData = async () => {
+      // Only load if user is authenticated
+      if (!authApi.isAuthenticated()) {
+        navigate('/login');
+        return;
+      }
+
+      // Load credential first
+      try {
+        const credential = await credentialService.getCredentials();
+        if (credential?.id) {
+          setUserCredentialId(credential.id);
+          
+          // Load balance if on dashboard menu
+          if (activeMenu === 'dashboard') {
+            await loadBinanceBalance(credential.id);
+          }
+        }
+      } catch (error) {
+        console.log('No credential found yet');
+      }
+    };
+
+    loadData();
+  }, [activeMenu]);
+
+  const loadBinanceBalance = async (credentialId?: string) => {
+    const credId = credentialId || userCredentialId;
+    if (!credId) return;
+    
+    try {
+      setLoadingBalance(true);
+      setBalanceError('');
+      const response = await binanceService.getBalance(credId);
+      
+      if (response.success && response.data?.balances) {
+        setBinanceBalance(response.data.balances);
+      }
+    } catch (error: any) {
+      console.error('Failed to load Binance balance:', error);
+      setBalanceError(error.response?.data?.message || 'Failed to load balance');
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  // Calculate total balance in USDT
+  const calculateTotalBalance = () => {
+    if (!binanceBalance) return 0;
+    
+    let total = 0;
+    if (binanceBalance.USDT) {
+      total += binanceBalance.USDT.total;
+    }
+    // Add other stablecoins
+    if (binanceBalance.BUSD) total += binanceBalance.BUSD.total;
+    if (binanceBalance.USDC) total += binanceBalance.USDC.total;
+    
+    return total;
+  };
 
   // Dummy data untuk demo
   const accountBalance = {
@@ -102,14 +174,11 @@ const Dashboard = () => {
               {sidebarOpen && <span className="nav-label">{item.label}</span>}
             </button>
           ))}
-        </nav>
-
-        <div className="sidebar-footer">
           <button className="nav-item logout-btn" onClick={handleLogout}>
             <span className="nav-icon">🚪</span>
             {sidebarOpen && <span className="nav-label">{t.dashboard?.logout || 'Logout'}</span>}
           </button>
-        </div>
+        </nav>
       </aside>
 
       {/* Main Content */}
@@ -158,11 +227,28 @@ const Dashboard = () => {
                   <div className="stat-icon balance">💰</div>
                   <div className="stat-info">
                     <span className="stat-label">{t.dashboard?.totalBalance || 'Total Balance'}</span>
-                    <span className="stat-value">${accountBalance.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    <div className="stat-detail">
-                      <span>{t.dashboard?.available || 'Available'}: ${accountBalance.available.toLocaleString()}</span>
-                      <span>{t.dashboard?.inOrder || 'In Order'}: ${accountBalance.inOrder.toLocaleString()}</span>
-                    </div>
+                    {loadingBalance ? (
+                      <span className="stat-value">Loading...</span>
+                    ) : balanceError ? (
+                      <span className="stat-value error-text" style={{ fontSize: '14px', color: '#ef4444' }}>
+                        {balanceError}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="stat-value">
+                          ${calculateTotalBalance().toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT
+                        </span>
+                        {binanceBalance && (
+                          <div className="stat-detail">
+                            {Object.entries(binanceBalance).slice(0, 3).map(([asset, data]) => (
+                              <span key={asset}>
+                                {asset}: {data.total.toLocaleString('en-US', { maximumFractionDigits: 6 })}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
 

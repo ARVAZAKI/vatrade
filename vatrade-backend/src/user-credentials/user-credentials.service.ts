@@ -94,4 +94,17 @@ export class UserCredentialsService {
 
     return credential;
   }
+
+  // Find by credential ID (for Binance service)
+  async findById(credentialId: string, userId: string): Promise<UserCredential> {
+    const credential = await this.credentialRepository.findOne({
+      where: { id: credentialId, userId },
+    });
+
+    if (!credential) {
+      throw new NotFoundException('Credentials not found');
+    }
+
+    return credential;
+  }
 }

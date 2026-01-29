@@ -4,6 +4,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/auth.service';
 import CredentialPage from './Credential';
+import ProfilePage from './Profile';
 import './Dashboard.css';
 
 
@@ -298,11 +299,7 @@ const Dashboard = () => {
           )}
 
           {activeMenu === 'account' && (
-            <div className="placeholder-content animate-fade-in-up">
-              <div className="placeholder-icon">⚙️</div>
-              <h2>{t.dashboard?.accountSettings || 'Account Settings'}</h2>
-              <p>{t.dashboard?.comingSoon || 'Coming soon...'}</p>
-            </div>
+            <ProfilePage />
           )}
         </main>
       </div>

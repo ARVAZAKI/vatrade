@@ -1,0 +1,466 @@
+.strategy-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.strategy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.strategy-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.dark-theme .strategy-header h1 {
+  color: #f5f5f5;
+}
+
+.strategy-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .strategy-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Strategy Form Card */
+.strategy-form-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .strategy-form-card {
+  background: #1e1e1e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.strategy-form-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.dark-theme .strategy-form-card h2 {
+  color: #f5f5f5;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.dark-theme .form-group label {
+  color: #d0d0d0;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  color: #1a1a1a;
+  transition: all 0.3s;
+}
+
+.dark-theme .form-group input,
+.dark-theme .form-group select {
+  background: #2a2a2a;
+  border-color: #404040;
+  color: #f5f5f5;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group .checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group .checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+/* Coins List */
+.coins-list {
+  margin-top: 24px;
+}
+
+.coins-list h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.dark-theme .coins-list h3 {
+  color: #d0d0d0;
+}
+
+.coin-item {
+  display: grid;
+  grid-template-columns: 2fr 2fr auto;
+  gap: 12px;
+  align-items: end;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.dark-theme .coin-item {
+  background: #2a2a2a;
+}
+
+.coin-item .form-group {
+  margin-bottom: 0;
+}
+
+.btn-remove-coin {
+  padding: 10px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-remove-coin:hover {
+  background: #dc2626;
+}
+
+.btn-add-coin {
+  width: 100%;
+  padding: 10px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 12px;
+  transition: all 0.3s;
+}
+
+.btn-add-coin:hover {
+  background: #059669;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* Strategies List */
+.strategies-list-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme .strategies-list-card {
+  background: #1e1e1e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.strategies-list-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.dark-theme .strategies-list-card h2 {
+  color: #f5f5f5;
+}
+
+.strategy-item {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  transition: all 0.3s;
+}
+
+.dark-theme .strategy-item {
+  border-color: #404040;
+}
+
+.strategy-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.strategy-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.strategy-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strategy-item-title h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.dark-theme .strategy-item-title h3 {
+  color: #f5f5f5;
+}
+
+.strategy-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.strategy-status.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.strategy-status.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dark-theme .strategy-status.active {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+.dark-theme .strategy-status.inactive {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.strategy-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.btn-edit {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #dc2626;
+}
+
+.strategy-item-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dark-theme .info-label {
+  color: #9ca3af;
+}
+
+.info-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.dark-theme .info-value {
+  color: #f5f5f5;
+}
+
+.strategy-coins {
+  margin-top: 12px;
+}
+
+.strategy-coins h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.dark-theme .strategy-coins h4 {
+  color: #d0d0d0;
+}
+
+.coins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.coin-tag {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.dark-theme .coin-tag {
+  background: #2a2a2a;
+}
+
+.coin-tag-symbol {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.dark-theme .coin-tag-symbol {
+  color: #f5f5f5;
+}
+
+.coin-tag-allocation {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+}
+
+.error-message {
+  padding: 12px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  margin-bottom: 16px;
+}
+
+.dark-theme .error-message {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fca5a5;
+}
+
+.success-message {
+  padding: 12px;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: #065f46;
+  margin-bottom: 16px;
+}
+
+.dark-theme .success-message {
+  background: #064e3b;
+  border-color: #065f46;
+  color: #6ee7b7;
+}

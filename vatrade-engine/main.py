@@ -294,6 +294,176 @@ async def get_binance_ticker(request: BinanceAccountRequest, symbol: str = "BTCU
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# WebSocket API Endpoints
+@app.post("/binance/ws/account")
+async def get_binance_account_ws(request: BinanceAccountRequest):
+    """
+    Get account information via WebSocket API (real-time balance)
+    """
+    try:
+        from binance_websocket_api import ws_api_manager
+        
+        client = await ws_api_manager.get_client(
+            user_id=request.user_id,
+            credential_id=request.credential_id,
+            api_key=request.api_key,
+            api_secret=request.secret_key,
+            testnet=settings.binance_testnet
+        )
+        
+        # Get account status with non-zero balances only
+        account_data = await client.get_account_status(omit_zero_balances=True)
+        
+        # Format balances
+        balances = {}
+        for balance in account_data.get('balances', []):
+            asset = balance['asset']
+            free = float(balance['free'])
+            locked = float(balance['locked'])
+            total = free + locked
+            
+            if total > 0:
+                balances[asset] = {
+                    'free': free,
+                    'locked': locked,
+                    'total': total
+                }
+        
+        return BotResponse(
+            success=True,
+            message="Account data retrieved via WebSocket",
+            data={
+                'balances': balances,
+                'canTrade': account_data.get('canTrade', False),
+                'canWithdraw': account_data.get('canWithdraw', False),
+                'canDeposit': account_data.get('canDeposit', False),
+                'accountType': account_data.get('accountType', 'SPOT'),
+                'updateTime': account_data.get('updateTime')
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch account via WebSocket: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/binance/ws/orders")
+async def get_binance_orders_ws(
+    request: BinanceAccountRequest,
+    symbol: str = "BTCUSDT",
+    limit: int = 100
+):
+    """
+    Get order history via WebSocket API
+    """
+    try:
+        from binance_websocket_api import ws_api_manager
+        
+        client = await ws_api_manager.get_client(
+            user_id=request.user_id,
+            credential_id=request.credential_id,
+            api_key=request.api_key,
+            api_secret=request.secret_key,
+            testnet=settings.binance_testnet
+        )
+        
+        # Get recent orders (last 24 hours)
+        end_time = int(time.time() * 1000)
+        start_time = end_time - (24 * 60 * 60 * 1000)  # 24 hours ago
+        
+        orders = await client.get_all_orders(
+            symbol=symbol,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit
+        )
+        
+        return BotResponse(
+            success=True,
+            message="Orders retrieved via WebSocket",
+            data={'orders': orders}
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch orders via WebSocket: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/binance/ws/trades")
+async def get_binance_trades_ws(
+    request: BinanceAccountRequest,
+    symbol: str = "BTCUSDT",
+    limit: int = 100
+):
+    """
+    Get trade history via WebSocket API
+    """
+    try:
+        from binance_websocket_api import ws_api_manager
+        import time
+        
+        client = await ws_api_manager.get_client(
+            user_id=request.user_id,
+            credential_id=request.credential_id,
+            api_key=request.api_key,
+            api_secret=request.secret_key,
+            testnet=settings.binance_testnet
+        )
+        
+        # Get recent trades (last 24 hours)
+        end_time = int(time.time() * 1000)
+        start_time = end_time - (24 * 60 * 60 * 1000)
+        
+        trades = await client.get_my_trades(
+            symbol=symbol,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit
+        )
+        
+        return BotResponse(
+            success=True,
+            message="Trades retrieved via WebSocket",
+            data={'trades': trades}
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch trades via WebSocket: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/binance/ws/open-orders")
+async def get_binance_open_orders_ws(
+    request: BinanceAccountRequest,
+    symbol: Optional[str] = None
+):
+    """
+    Get current open orders via WebSocket API
+    """
+    try:
+        from binance_websocket_api import ws_api_manager
+        
+        client = await ws_api_manager.get_client(
+            user_id=request.user_id,
+            credential_id=request.credential_id,
+            api_key=request.api_key,
+            api_secret=request.secret_key,
+            testnet=settings.binance_testnet
+        )
+        
+        open_orders = await client.get_open_orders(symbol=symbol)
+        
+        return BotResponse(
+            success=True,
+            message="Open orders retrieved via WebSocket",
+            data={'orders': open_orders}
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch open orders via WebSocket: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",

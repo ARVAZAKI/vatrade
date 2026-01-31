@@ -477,8 +477,11 @@
 }
 
 .btn-sm {
-  padding: 8px 16px;
-  font-size: 0.85rem;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  width: auto;
+  min-width: fit-content;
 }
 
 /* Table */

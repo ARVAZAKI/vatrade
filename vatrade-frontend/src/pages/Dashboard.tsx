@@ -4,10 +4,11 @@ import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../services/auth.service';
 import binanceService from '../services/binance.service';
-import type { BinanceBalance } from '../services/binance.service';
+import type { BinanceBalance, BinanceOrder, BinanceTrade } from '../services/binance.service';
 import { credentialService } from '../services/credential.service';
 import CredentialPage from './Credential';
 import ProfilePage from './Profile';
+import StrategyPage from './Strategy';
 import './Dashboard.css';
 
 
@@ -24,6 +25,9 @@ const Dashboard = () => {
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [balanceError, setBalanceError] = useState('');
   const [userCredentialId, setUserCredentialId] = useState<string | null>(null);
+  const [orders, setOrders] = useState<BinanceOrder[]>([]);
+  const [trades, setTrades] = useState<BinanceTrade[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Handle responsive sidebar on window resize
   useEffect(() => {
@@ -74,16 +78,43 @@ const Dashboard = () => {
     try {
       setLoadingBalance(true);
       setBalanceError('');
-      const response = await binanceService.getBalance(credId);
+      
+      // Use WebSocket API for real-time balance
+      const response = await binanceService.getBalanceWebSocket(credId);
       
       if (response.success && response.data?.balances) {
         setBinanceBalance(response.data.balances);
       }
+      
+      // Load orders and trades
+      await loadOrders(credId);
     } catch (error: any) {
-      console.error('Failed to load Binance balance:', error);
+      console.error('Failed to load Binance data:', error);
       setBalanceError(error.response?.data?.message || 'Failed to load balance');
     } finally {
       setLoadingBalance(false);
+    }
+  };
+
+  const loadOrders = async (credentialId: string) => {
+    try {
+      setLoadingOrders(true);
+      
+      // Load orders via WebSocket
+      const ordersResponse = await binanceService.getOrdersWebSocket(credentialId, 'BTCUSDT', 50);
+      if (ordersResponse.success) {
+        setOrders(ordersResponse.data.orders);
+      }
+      
+      // Load trades via WebSocket
+      const tradesResponse = await binanceService.getTradesWebSocket(credentialId, 'BTCUSDT', 50);
+      if (tradesResponse.success) {
+        setTrades(tradesResponse.data.trades);
+      }
+    } catch (error: any) {
+      console.error('Failed to load orders:', error);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -323,61 +354,134 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Trading Logs */}
+              {/* Trading Logs - Real Data from Binance */}
               <div className="logs-section animate-fade-in-up delay-5">
                 <div className="section-header">
-                  <h2>{t.dashboard?.recentTrades || 'Recent Trades'}</h2>
-                  <button className="btn btn-secondary btn-sm">
-                    {t.dashboard?.viewAll || 'View All'}
+                  <h2>{loadingOrders ? 'Loading...' : (orders.length > 0 ? `Recent Orders (${orders.length})` : t.dashboard?.recentTrades || 'Recent Trades')}</h2>
+                  <button className="btn btn-secondary btn-sm" onClick={() => userCredentialId && loadOrders(userCredentialId)}>
+                    🔄 Refresh
                   </button>
                 </div>
 
-                <div className="table-container">
-                  <table className="trades-table">
-                    <thead>
-                      <tr>
-                        <th>{t.dashboard?.time || 'Time'}</th>
-                        <th>{t.dashboard?.pair || 'Pair'}</th>
-                        <th>{t.dashboard?.type || 'Type'}</th>
-                        <th>{t.dashboard?.price || 'Price'}</th>
-                        <th>{t.dashboard?.amount || 'Amount'}</th>
-                        <th>{t.dashboard?.total || 'Total'}</th>
-                        <th>{t.dashboard?.status || 'Status'}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tradingLogs.map((log) => (
-                        <tr key={log.id} className="animate-fade-in">
-                          <td className="time">{log.time}</td>
-                          <td className="pair">{log.pair}</td>
-                          <td>
-                            <span className={`badge ${log.type.toLowerCase()}`}>
-                              {log.type}
-                            </span>
-                          </td>
-                          <td className="price">${log.price.toLocaleString()}</td>
-                          <td>{log.amount}</td>
-                          <td className="total">${log.total.toLocaleString()}</td>
-                          <td>
-                            <span className={`status ${log.status.toLowerCase()}`}>
-                              {log.status}
-                            </span>
-                          </td>
+                {loadingOrders ? (
+                  <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <p>Loading orders from Binance...</p>
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                    <p>No orders found. Start trading to see your orders here.</p>
+                  </div>
+                ) : (
+                  <div className="table-container">
+                    <table className="trades-table">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Pair</th>
+                          <th>Side</th>
+                          <th>Type</th>
+                          <th>Price</th>
+                          <th>Amount</th>
+                          <th>Filled</th>
+                          <th>Total</th>
+                          <th>Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {orders.slice(0, 20).map((order) => (
+                          <tr key={order.orderId} className="animate-fade-in">
+                            <td className="time">
+                              {new Date(order.updateTime).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                            <td className="pair">{order.symbol}</td>
+                            <td>
+                              <span className={`badge ${order.side.toLowerCase()}`}>
+                                {order.side}
+                              </span>
+                            </td>
+                            <td>{order.type}</td>
+                            <td className="price">${parseFloat(order.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</td>
+                            <td>{parseFloat(order.origQty).toFixed(6)}</td>
+                            <td>{parseFloat(order.executedQty).toFixed(6)}</td>
+                            <td className="total">${parseFloat(order.cummulativeQuoteQty).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td>
+                              <span className={`status ${order.status.toLowerCase().replace('_', '-')}`}>
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
+
+              {/* Trade Executions - Real Data from Binance */}
+              {trades.length > 0 && (
+                <div className="logs-section animate-fade-in-up delay-6" style={{ marginTop: '20px' }}>
+                  <div className="section-header">
+                    <h2>Trade Executions ({trades.length})</h2>
+                  </div>
+
+                  <div className="table-container">
+                    <table className="trades-table">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Pair</th>
+                          <th>Side</th>
+                          <th>Price</th>
+                          <th>Quantity</th>
+                          <th>Total</th>
+                          <th>Fee</th>
+                          <th>Role</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trades.slice(0, 20).map((trade) => (
+                          <tr key={trade.id} className="animate-fade-in">
+                            <td className="time">
+                              {new Date(trade.time).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              })}
+                            </td>
+                            <td className="pair">{trade.symbol}</td>
+                            <td>
+                              <span className={`badge ${trade.isBuyer ? 'buy' : 'sell'}`}>
+                                {trade.isBuyer ? 'BUY' : 'SELL'}
+                              </span>
+                            </td>
+                            <td className="price">${parseFloat(trade.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</td>
+                            <td>{parseFloat(trade.qty).toFixed(6)}</td>
+                            <td className="total">${parseFloat(trade.quoteQty).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td>{parseFloat(trade.commission).toFixed(6)} {trade.commissionAsset}</td>
+                            <td>
+                              <span className={trade.isMaker ? 'maker' : 'taker'}>
+                                {trade.isMaker ? 'Maker' : 'Taker'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
           {activeMenu === 'strategy' && (
-            <div className="placeholder-content animate-fade-in-up">
-              <div className="placeholder-icon">⚙️</div>
-              <h2>{t.dashboard?.strategyTitle || 'Strategy Management'}</h2>
-              <p>{t.dashboard?.comingSoon || 'Coming soon...'}</p>
-            </div>
+            <StrategyPage />
           )}
 
           {activeMenu === 'credential' && (

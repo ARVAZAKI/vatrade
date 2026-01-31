@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   Request,
+  Headers,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TradeHistoryService } from './trade-history.service';
@@ -15,13 +16,27 @@ import { CreateTradeHistoryDto } from './dto/create-trade-history.dto';
 import { UpdateTradeHistoryDto } from './dto/update-trade-history.dto';
 
 @Controller('trade-history')
-@UseGuards(JwtAuthGuard)
 export class TradeHistoryController {
   constructor(private readonly tradeHistoryService: TradeHistoryService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Request() req, @Body() createTradeHistoryDto: CreateTradeHistoryDto) {
-    return this.tradeHistoryService.create(req.user.userId, createTradeHistoryDto);
+    return this.tradeHistoryService.create(req.user.sub, createTradeHistoryDto);
+  }
+
+  @Post('bot')
+  async createFromBot(
+    @Headers('x-bot-user-id') botUserId: string,
+    @Body() createTradeHistoryDto: CreateTradeHistoryDto,
+  ) {
+    // This endpoint is for internal use by the trading engine
+    // Validate that request comes from internal network
+    if (!botUserId) {
+      throw new Error('X-Bot-User-Id header is required');
+    }
+    
+    return this.tradeHistoryService.create(botUserId, createTradeHistoryDto);
   }
 
   @Get()

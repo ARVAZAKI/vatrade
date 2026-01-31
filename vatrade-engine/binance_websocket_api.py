@@ -180,6 +180,61 @@ class BinanceWebSocketAPI:
         response = await self._send_request('myTrades', params)
         return response.get('result', [])
     
+    async def place_order(self, symbol: str, side: str, order_type: str,
+                         quantity: float, price: Optional[float] = None,
+                         time_in_force: str = 'GTC') -> Dict[str, Any]:
+        """
+        Place a new order
+        Method: order.place
+        
+        Args:
+            symbol: Trading pair (e.g., 'BTCUSDT')
+            side: 'BUY' or 'SELL'
+            order_type: 'LIMIT', 'MARKET', 'STOP_LOSS', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT', 'TAKE_PROFIT_LIMIT'
+            quantity: Amount to buy/sell
+            price: Price (required for LIMIT orders)
+            time_in_force: 'GTC' (Good-Till-Canceled), 'IOC' (Immediate-Or-Cancel), 'FOK' (Fill-Or-Kill)
+        
+        Returns:
+            Order information including orderId, status, fills, etc.
+        """
+        params = {
+            'symbol': symbol,
+            'side': side.upper(),
+            'type': order_type.upper(),
+            'quantity': str(quantity)
+        }
+        
+        # Add price for LIMIT orders
+        if order_type.upper() in ['LIMIT', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT']:
+            if price is None:
+                raise ValueError(f"{order_type} order requires price")
+            params['price'] = str(price)
+            params['timeInForce'] = time_in_force
+        
+        response = await self._send_request('order.place', params)
+        return response.get('result', {})
+    
+    async def cancel_order(self, symbol: str, order_id: int) -> Dict[str, Any]:
+        """
+        Cancel an active order
+        Method: order.cancel
+        
+        Args:
+            symbol: Trading pair
+            order_id: Order ID to cancel
+        
+        Returns:
+            Canceled order information
+        """
+        params = {
+            'symbol': symbol,
+            'orderId': order_id
+        }
+        
+        response = await self._send_request('order.cancel', params)
+        return response.get('result', {})
+    
     async def get_order_status(self, symbol: str, order_id: int) -> Dict[str, Any]:
         """
         Query single order status

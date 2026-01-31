@@ -1,11 +1,13 @@
 import asyncio
 import uuid
+import httpx
 from typing import Dict, Optional, List
 from datetime import datetime
 import logging
 
 from binance_client import BinanceClient
 from strategy import StrategyFactory
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -159,24 +161,82 @@ class BotManager:
             price = signal.get('price')
             amount = signal.get('amount', bot.trade_amount)
             
-            logger.info(f"Bot {bot.bot_id} executing {order_type} order for {bot.symbol}")
+            logger.info(
+                f"🔔 Bot {bot.bot_id} SIGNAL DETECTED: "
+                f"{order_type.upper()} {bot.symbol} at {price:.2f} USDT, "
+                f"Amount: {amount:.6f}"
+            )
             
             # Place order through Binance client
+            # If price is None → Market order
+            # If price is set → Limit order
             order = await bot.client.place_order(
                 symbol=bot.symbol,
                 side=order_type.upper(),
                 amount=amount,
-                price=price
+                price=price  # None for market, price for limit
             )
             
-            # Log trade to backend (optional)
-            # await self._log_trade_to_backend(bot, order)
+            logger.info(
+                f"✅ ORDER EXECUTED - Bot {bot.bot_id}: "
+                f"OrderID={order.get('orderId')}, "
+                f"Status={order.get('status')}, "
+                f"ExecutedQty={order.get('executedQty', 0)}"
+            )
             
-            return order
+            # Log trade to backend database
+            await self._log_trade_to_backend(bot, signal, order)
+            
+            return {
+                'success': True,
+                'order_id': order.get('orderId'),
+                'status': order.get('status'),
+                'executed_qty': float(order.get('executedQty', 0)),
+                'executed_price': float(order.get('price', 0)) if order.get('price') else None,
+                'profit': 0  # Calculate based on entry/exit
+            }
             
         except Exception as e:
-            logger.error(f"Failed to execute trade for bot {bot.bot_id}: {str(e)}")
+            logger.error(f"❌ FAILED to execute trade for bot {bot.bot_id}: {str(e)}")
             return None
+    
+    async def _log_trade_to_backend(self, bot: BotInstance, signal: Dict, order: Dict):
+        """Log executed trade to backend database"""
+        try:
+            backend_url = getattr(settings, 'backend_url', 'http://backend:3000')
+            
+            # Prepare trade data matching CreateTradeHistoryDto
+            trade_data = {
+                'symbol': bot.symbol,
+                'action': signal.get('type', 'buy').lower(),  # 'buy' or 'sell'
+                'price': float(order.get('price', signal.get('price', 0))),
+                'quantity': float(order.get('executedQty', signal.get('amount', 0))),
+                'allocationAmount': float(bot.trade_amount)
+            }
+            
+            # POST to backend bot endpoint with userId in header
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{backend_url}/trade-history/bot",
+                    json=trade_data,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'X-Bot-User-Id': str(bot.user_id)
+                    },
+                    timeout=10.0
+                )
+                
+                if response.status_code in [200, 201]:
+                    logger.info(
+                        f"📊 Trade logged to backend for user {bot.user_id}: "
+                        f"{trade_data['action'].upper()} {trade_data['symbol']} @ {trade_data['price']}"
+                    )
+                else:
+                    logger.warning(f"⚠️ Failed to log trade to backend: {response.status_code} - {response.text}")
+                    
+        except Exception as e:
+            logger.error(f"❌ Error logging trade to backend: {str(e)}")
+            # Don't raise - logging failure shouldn't stop bot
     
     async def stop_bot(self, user_id: int, bot_id: str) -> bool:
         """Stop a running bot"""

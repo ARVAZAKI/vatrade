@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { strategyService, type StrategyCoin, type CreateCoinDto } from '../services/strategy.service';
+import botService, { type BotStatusResponse } from '../services/bot.service';
 import { useTheme } from '../hooks/useTheme';
 import axios from 'axios';
 import './Strategy.css';
@@ -11,10 +12,19 @@ interface MasterCoin {
   updatedAt: string;
 }
 
+interface UserCredential {
+  id: string;
+  name: string;
+  exchange: string;
+}
+
 const StrategyPage = () => {
   const { isDark } = useTheme();
   const [coins, setCoins] = useState<StrategyCoin[]>([]);
   const [masterCoins, setMasterCoins] = useState<MasterCoin[]>([]);
+  const [credentials, setCredentials] = useState<UserCredential[]>([]);
+  const [botStatus, setBotStatus] = useState<BotStatusResponse | null>(null);
+  const [userBalance, setUserBalance] = useState<{ USDT?: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -32,9 +42,25 @@ const StrategyPage = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    loadCoins();
-    loadMasterCoins();
+    const initData = async () => {
+      await loadCredentials();
+      await loadCoins();
+      await loadMasterCoins();
+      await loadBotStatus();
+    };
+    initData();
+    
+    // Refresh bot status every 10 seconds
+    const interval = setInterval(loadBotStatus, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Load balance when credentials change
+  useEffect(() => {
+    if (credentials.length > 0) {
+      loadUserBalance();
+    }
+  }, [credentials]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -72,6 +98,65 @@ const StrategyPage = () => {
     }
   };
 
+  const loadCredentials = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = localStorage.getItem('vatrade-token');
+      const response = await axios.get<UserCredential>(`${API_URL}/user-credentials`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('✅ Credentials loaded:', response.data);
+      
+      // Backend returns single object, wrap in array
+      const credentialsArray = response.data ? [response.data] : [];
+      setCredentials(credentialsArray);
+      
+      // Load balance after credentials are set
+      if (response.data && response.data.id) {
+        await loadUserBalance(response.data.id);
+      }
+    } catch (err: any) {
+      console.error('❌ Failed to load credentials:', err);
+      setCredentials([]);
+    }
+  };
+
+  const loadBotStatus = async () => {
+    try {
+      const status = await botService.getBotStatus();
+      setBotStatus(status);
+    } catch (err: any) {
+      console.error('Failed to load bot status:', err);
+    }
+  };
+
+  const loadUserBalance = async (credentialId: string) => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = localStorage.getItem('vatrade-token');
+      const response = await axios.get(
+        `${API_URL}/binance/ws/balance?credentialId=${credentialId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data?.success && response.data?.data) {
+        const balances = response.data.data;
+        console.log('✅ Balance loaded:', balances);
+        
+        // Parse USDT as number - backend returns { USDT: { free, locked, total } }
+        const usdtData = balances.USDT;
+        const parsedBalance = {
+          USDT: usdtData?.total || usdtData?.free || 0
+        };
+        setUserBalance(parsedBalance);
+      }
+    } catch (err: any) {
+      console.error('❌ Failed to load user balance:', err);
+      // Set balance to 0 if error to prevent bot start
+      setUserBalance({ USDT: 0 });
+    }
+  };
+
   const filteredMasterCoins = masterCoins.filter(coin =>
     coin.symbol.toLowerCase().includes(searchSymbol.toLowerCase())
   );
@@ -93,8 +178,8 @@ const StrategyPage = () => {
       return;
     }
 
-    if (!formData.allocationAmount || parseFloat(formData.allocationAmount) <= 0) {
-      setError('Allocation amount must be greater than 0');
+    if (!formData.allocationAmount || parseFloat(formData.allocationAmount) < 5) {
+      setError('Allocation amount must be at least 5 USDT');
       return;
     }
 
@@ -167,6 +252,108 @@ const StrategyPage = () => {
     setError('');
   };
 
+  const handleStartBot = async (coinId: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+      
+      console.log('Current credentials state:', credentials);
+      
+      // Validate credentials exist
+      if (!credentials || credentials.length === 0) {
+        setError('⚠️ Please add your Binance API credentials first in the Credentials page');
+        setLoading(false);
+        return;
+      }
+
+      // Double check credentials[0] exists
+      const firstCredential = credentials[0];
+      console.log('First credential:', firstCredential);
+      
+      if (!firstCredential) {
+        setError('⚠️ No credential found. Please refresh the page and try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Get credential ID - try different property names
+      const credentialId = firstCredential.id || firstCredential._id || null;
+      
+      if (!credentialId) {
+        console.error('Credential object:', firstCredential);
+        setError('⚠️ Credential ID not found. Please delete and re-add your credential.');
+        setLoading(false);
+        return;
+      }
+
+      // Get coin data to check allocation amount
+      const coin = coins.find(c => c.id === coinId);
+      if (!coin) {
+        setError('❌ Coin not found');
+        setLoading(false);
+        return;
+      }
+
+      // Validate balance (REQUIRED check - block if insufficient)
+      if (!userBalance || userBalance.USDT === undefined || userBalance.USDT === 0) {
+        setError('❌ Unable to load balance. Please refresh the page and try again.');
+        setLoading(false);
+        return;
+      }
+      
+      if (userBalance.USDT < coin.allocationAmount) {
+        setError(`❌ Insufficient USDT balance. Required: ${coin.allocationAmount} USDT, Available: ${userBalance.USDT.toFixed(2)} USDT`);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Starting bot with:', { coinId, credentialId, allocation: coin.allocationAmount });
+      
+      const response = await botService.startBot({
+        coinId,
+        credentialId,
+        strategy: 'ema20_ema50_rsi',
+      });
+      
+      console.log('Bot started:', response);
+      
+      setSuccess(`✅ Bot started successfully for ${coin.symbol}! Trading will begin automatically when conditions are met.`);
+      await loadBotStatus();
+      
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err: any) {
+      console.error('Failed to start bot:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to start bot';
+      setError(`❌ ${errorMsg}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStopBot = async (coinId: string) => {
+    if (!confirm('Are you sure you want to stop this bot?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      await botService.stopBot(coinId);
+      setSuccess('Bot stopped successfully!');
+      await loadBotStatus();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to stop bot');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isBotRunning = (coinId: string): boolean => {
+    return botStatus?.data?.bots?.some(bot => bot.coinId === coinId) || false;
+  };
+
   const totalAllocation = coins.reduce((sum, coin) => sum + (coin.allocationAmount || 0), 0);
 
   return (
@@ -176,6 +363,38 @@ const StrategyPage = () => {
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
           Manage your automated trading strategy coins
         </p>
+        {credentials.length === 0 && (
+          <div style={{
+            background: '#fef3c7',
+            color: '#92400e',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginTop: '12px',
+            fontSize: '0.9rem',
+            border: '1px solid #fbbf24'
+          }}>
+            ⚠️ No API credentials found. Please add your Binance API key in <strong>Credentials</strong> page to start trading.
+          </div>
+        )}
+        {credentials.length > 0 && (
+          <div style={{
+            background: '#d1fae5',
+            color: '#065f46',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginTop: '12px',
+            fontSize: '0.9rem',
+            border: '1px solid #34d399',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>✅ {credentials.length} API credential(s) configured • Bots: {botStatus?.data?.runningBots || 0} running</span>
+            {userBalance && typeof userBalance.USDT === 'number' && (
+              <span style={{ fontWeight: '600' }}>💰 USDT Balance: {userBalance.USDT.toFixed(2)}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Info Alert */}
@@ -281,11 +500,15 @@ const StrategyPage = () => {
               <input
                 type="number"
                 step="0.01"
+                min="5"
                 value={formData.allocationAmount}
                 onChange={(e) => setFormData({ ...formData, allocationAmount: e.target.value })}
-                placeholder="e.g., 100"
+                placeholder="Minimum 5 USDT"
                 required
               />
+              <small style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>
+                Minimum allocation: 5 USDT
+              </small>
             </div>
 
             <div className="form-group">
@@ -361,6 +584,43 @@ const StrategyPage = () => {
                       })}
                     </span>
                   </div>
+                  <div className="info-item">
+                    <span className="info-label">Bot Status</span>
+                    <span className="info-value">
+                      {isBotRunning(coin.id) ? (
+                        <span style={{ color: '#10b981', fontWeight: '600' }}>🟢 Running</span>
+                      ) : (
+                        <span style={{ color: '#6b7280', fontWeight: '600' }}>⚫ Stopped</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                  {isBotRunning(coin.id) ? (
+                    <button 
+                      className="btn-icon btn-delete" 
+                      onClick={() => handleStopBot(coin.id)}
+                      disabled={loading}
+                      style={{ flex: 1 }}
+                    >
+                      ⏸️ Stop Bot
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn-icon btn-edit" 
+                      onClick={() => handleStartBot(coin.id)}
+                      disabled={loading || !coin.isActive || !credentials || credentials.length === 0}
+                      style={{ 
+                        flex: 1,
+                        opacity: (!coin.isActive || !credentials || credentials.length === 0) ? 0.5 : 1,
+                        cursor: (!coin.isActive || !credentials || credentials.length === 0) ? 'not-allowed' : 'pointer'
+                      }}
+                      title={!coin.isActive ? 'Activate coin first' : (!credentials || credentials.length === 0) ? 'Add API credentials first' : 'Start automated trading'}
+                    >
+                      ▶️ Start Bot
+                    </button>
+                  )}
                 </div>
               </div>
             ))

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Dict, Optional
 import uvicorn
 import logging
+import time
 
 from config import settings
 from bot_manager import BotManager
@@ -37,8 +38,8 @@ bot_manager = BotManager()
 
 # Request/Response models
 class BotStartRequest(BaseModel):
-    user_id: int
-    credential_id: int
+    user_id: str  # Changed to str to accept UUID
+    credential_id: str  # Changed to str to accept UUID
     api_key: str  # Binance API key dari backend
     secret_key: str  # Binance secret key dari backend
     strategy: str = "simple_moving_average"
@@ -47,12 +48,12 @@ class BotStartRequest(BaseModel):
 
 
 class BotStopRequest(BaseModel):
-    user_id: int
+    user_id: str  # Changed to str to accept UUID
     bot_id: str
 
 
 class BotStatusRequest(BaseModel):
-    user_id: int
+    user_id: str  # Changed to str to accept UUID
     bot_id: Optional[str] = None
 
 

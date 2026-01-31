@@ -7,8 +7,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { UserCredentialsModule } from './user-credentials/user-credentials.module';
 import { BinanceModule } from './binance/binance.module';
+import { StrategiesModule } from './strategies/strategies.module';
 import { User } from './users/user.entity';
 import { UserCredential } from './user-credentials/user-credential.entity';
+import { StrategyCoin } from './strategies/strategy-coin.entity';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { UserCredential } from './user-credentials/user-credential.entity';
         username: configService.get<string>('DATABASE_USER', 'postgres'),
         password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
         database: configService.get<string>('DATABASE_NAME', 'vatrade'),
-        entities: [User, UserCredential],
+        entities: [User, UserCredential, StrategyCoin],
         synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
@@ -37,6 +39,7 @@ import { UserCredential } from './user-credentials/user-credential.entity';
     UsersModule,
     UserCredentialsModule,
     BinanceModule,
+    StrategiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -134,4 +134,124 @@ export class BinanceService {
       );
     }
   }
+
+  /**
+   * Get account balance via WebSocket API (real-time)
+   */
+  async getBalanceWebSocket(userId: string, credentialId: string) {
+    try {
+      this.logger.log(`Fetching balance via WebSocket for user ${userId}`);
+
+      const credential = await this.userCredentialsService.findById(credentialId, userId);
+
+      if (!credential) {
+        throw new HttpException('Credential not found', HttpStatus.NOT_FOUND);
+      }
+
+      const response = await axios.post(`${this.engineUrl}/binance/ws/account`, {
+        user_id: userId,
+        credential_id: credentialId,
+        api_key: credential.apiKey,
+        secret_key: credential.secretKey,
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Failed to fetch balance via WebSocket: ${error.message}`);
+      
+      if (error.response?.data) {
+        throw new HttpException(
+          error.response.data.detail || 'Failed to fetch balance',
+          error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      
+      throw new HttpException(
+        'Failed to communicate with trading engine',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+
+  /**
+   * Get order history via WebSocket API
+   */
+  async getOrdersWebSocket(userId: string, credentialId: string, symbol: string = 'BTCUSDT', limit: number = 100) {
+    try {
+      this.logger.log(`Fetching orders via WebSocket for user ${userId}`);
+
+      const credential = await this.userCredentialsService.findById(credentialId, userId);
+
+      if (!credential) {
+        throw new HttpException('Credential not found', HttpStatus.NOT_FOUND);
+      }
+
+      const response = await axios.post(
+        `${this.engineUrl}/binance/ws/orders?symbol=${symbol}&limit=${limit}`,
+        {
+          user_id: userId,
+          credential_id: credentialId,
+          api_key: credential.apiKey,
+          secret_key: credential.secretKey,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Failed to fetch orders via WebSocket: ${error.message}`);
+      
+      if (error.response?.data) {
+        throw new HttpException(
+          error.response.data.detail || 'Failed to fetch orders',
+          error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      
+      throw new HttpException(
+        'Failed to communicate with trading engine',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+
+  /**
+   * Get trade history via WebSocket API
+   */
+  async getTradesWebSocket(userId: string, credentialId: string, symbol: string = 'BTCUSDT', limit: number = 100) {
+    try {
+      this.logger.log(`Fetching trades via WebSocket for user ${userId}`);
+
+      const credential = await this.userCredentialsService.findById(credentialId, userId);
+
+      if (!credential) {
+        throw new HttpException('Credential not found', HttpStatus.NOT_FOUND);
+      }
+
+      const response = await axios.post(
+        `${this.engineUrl}/binance/ws/trades?symbol=${symbol}&limit=${limit}`,
+        {
+          user_id: userId,
+          credential_id: credentialId,
+          api_key: credential.apiKey,
+          secret_key: credential.secretKey,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Failed to fetch trades via WebSocket: ${error.message}`);
+      
+      if (error.response?.data) {
+        throw new HttpException(
+          error.response.data.detail || 'Failed to fetch trades',
+          error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      
+      throw new HttpException(
+        'Failed to communicate with trading engine',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
 }

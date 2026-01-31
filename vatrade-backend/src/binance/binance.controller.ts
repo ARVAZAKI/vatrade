@@ -49,4 +49,52 @@ export class BinanceController {
     const userId = req.user.sub;
     return this.binanceService.getTicker(userId, credentialId, symbol);
   }
+
+  // WebSocket API Endpoints
+  @Get('ws/balance')
+  @ApiOperation({ summary: 'Get balance via WebSocket API (real-time)' })
+  @ApiResponse({ status: 200, description: 'Balance retrieved via WebSocket' })
+  async getBalanceWS(
+    @Request() req,
+    @Query('credentialId') credentialId: string,
+  ) {
+    const userId = req.user.sub;
+    return this.binanceService.getBalanceWebSocket(userId, credentialId);
+  }
+
+  @Get('ws/orders')
+  @ApiOperation({ summary: 'Get order history via WebSocket API' })
+  @ApiResponse({ status: 200, description: 'Orders retrieved via WebSocket' })
+  async getOrdersWS(
+    @Request() req,
+    @Query('credentialId') credentialId: string,
+    @Query('symbol') symbol?: string,
+    @Query('limit') limit?: number,
+  ) {
+    const userId = req.user.sub;
+    return this.binanceService.getOrdersWebSocket(
+      userId,
+      credentialId,
+      symbol || 'BTCUSDT',
+      limit || 100,
+    );
+  }
+
+  @Get('ws/trades')
+  @ApiOperation({ summary: 'Get trade history via WebSocket API' })
+  @ApiResponse({ status: 200, description: 'Trades retrieved via WebSocket' })
+  async getTradesWS(
+    @Request() req,
+    @Query('credentialId') credentialId: string,
+    @Query('symbol') symbol?: string,
+    @Query('limit') limit?: number,
+  ) {
+    const userId = req.user.sub;
+    return this.binanceService.getTradesWebSocket(
+      userId,
+      credentialId,
+      symbol || 'BTCUSDT',
+      limit || 100,
+    );
+  }
 }

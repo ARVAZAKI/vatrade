@@ -1,14 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { strategyService, type StrategyCoin, type CreateCoinDto } from '../services/strategy.service';
 import { useTheme } from '../hooks/useTheme';
+import axios from 'axios';
 import './Strategy.css';
+
+interface MasterCoin {
+  id: string;
+  symbol: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const StrategyPage = () => {
   const { isDark } = useTheme();
   const [coins, setCoins] = useState<StrategyCoin[]>([]);
+  const [masterCoins, setMasterCoins] = useState<MasterCoin[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -18,9 +28,26 @@ const StrategyPage = () => {
   });
   
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchSymbol, setSearchSymbol] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     loadCoins();
+    loadMasterCoins();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const loadCoins = async () => {
@@ -33,6 +60,26 @@ const StrategyPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMasterCoins = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await axios.get<MasterCoin[]>(`${API_URL}/coins`);
+      setMasterCoins(response.data);
+    } catch (err: any) {
+      console.error('Failed to load master coins:', err);
+    }
+  };
+
+  const filteredMasterCoins = masterCoins.filter(coin =>
+    coin.symbol.toLowerCase().includes(searchSymbol.toLowerCase())
+  );
+
+  const handleSelectCoin = (symbol: string) => {
+    setFormData({ ...formData, symbol });
+    setSearchSymbol(symbol);
+    setShowDropdown(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,6 +137,7 @@ const StrategyPage = () => {
       allocationAmount: coin.allocationAmount.toString(),
       isActive: coin.isActive,
     });
+    setSearchSymbol(coin.symbol);
     setEditingId(coin.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -114,6 +162,7 @@ const StrategyPage = () => {
 
   const handleCancel = () => {
     setFormData({ symbol: '', allocationAmount: '', isActive: true });
+    setSearchSymbol('');
     setEditingId(null);
     setError('');
   };
@@ -124,6 +173,43 @@ const StrategyPage = () => {
     <div className={`strategy-page ${isDark ? 'dark-theme' : ''}`}>
       <div className="strategy-header">
         <h1>⚙️ Trading Coins Management</h1>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+          Manage your automated trading strategy coins
+        </p>
+      </div>
+
+      {/* Info Alert */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: '20px 24px',
+        borderRadius: '12px',
+        marginBottom: '24px',
+        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+      }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
+          <span style={{ fontSize: '1.5rem' }}>💡</span>
+          <div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', fontWeight: '600' }}>Important Trading Guidelines</h3>
+            
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ display: 'block', marginBottom: '4px' }}>📊 Coin Selection:</strong>
+              <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', opacity: 0.95 }}>
+                Choose <strong>liquid and stable coins</strong> with high trading volume. Avoid highly volatile or risky assets such as memecoins. 
+                Recommended: major pairs like BTCUSDT, ETHUSDT, BNBUSDT for better execution and reduced risk.
+              </p>
+            </div>
+
+            <div>
+              <strong style={{ display: 'block', marginBottom: '4px' }}>🤖 Automated Trading:</strong>
+              <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', opacity: 0.95 }}>
+                Coins will be <strong>automatically purchased</strong> when they meet the bot's trading logic criteria. 
+                If conditions are not met, the coin will remain on standby until the bot confirms a valid buy signal. 
+                This ensures all trades follow strategic parameters for optimal entry points.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -137,13 +223,57 @@ const StrategyPage = () => {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Symbol *</label>
-              <input
-                type="text"
-                value={formData.symbol}
-                onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
-                placeholder="e.g., BTCUSDT"
-                required
-              />
+              <div style={{ position: 'relative' }} ref={dropdownRef}>
+                <input
+                  type="text"
+                  value={searchSymbol || formData.symbol}
+                  onChange={(e) => {
+                    setSearchSymbol(e.target.value.toUpperCase());
+                    setFormData({ ...formData, symbol: e.target.value.toUpperCase() });
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  placeholder="Search coin symbol..."
+                  required
+                  autoComplete="off"
+                />
+                {showDropdown && filteredMasterCoins.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '8px',
+                    marginTop: '4px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 1000,
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  }}>
+                    {filteredMasterCoins.map((coin) => (
+                      <div
+                        key={coin.id}
+                        onClick={() => handleSelectCoin(coin.symbol)}
+                        style={{
+                          padding: '12px 16px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid var(--border-light)',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <strong>{coin.symbol}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <small style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                Type to search from available coins
+              </small>
             </div>
 
             <div className="form-group">

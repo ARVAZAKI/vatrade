@@ -558,6 +558,19 @@
   color: #DC2626;
 }
 
+.badge-free,
+.badge-premium,
+.badge-info {
+  background: var(--blue-light);
+  color: var(--blue-dark);
+}
+
+.badge-success,
+.badge-admin {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
 .status {
   padding: 4px 12px;
   border-radius: 6px;

@@ -231,7 +231,7 @@ const Dashboard = () => {
               {language === 'id' ? 'EN' : 'ID'}
             </button>
             <div className="user-menu">
-              <div className="user-avatar" onClick={() => setProfileOpen(!profileOpen)}>JD</div>
+              <div className="user-avatar" onClick={() => setProfileOpen(!profileOpen)}></div>
               {profileOpen && (
                 <div className="profile-dropdown">
                   <button className="dropdown-item" onClick={() => { setActiveMenu('account'); setProfileOpen(false); }}>

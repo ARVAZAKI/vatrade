@@ -26,7 +26,13 @@ const Login = () => {
     try {
       const response = await authApi.login(formData);
       authApi.setAuth(response.accessToken, response.user);
-      navigate('/dashboard');
+      
+      // Redirect based on user role
+      if (response.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
     } finally {

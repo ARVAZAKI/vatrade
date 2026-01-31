@@ -42,27 +42,27 @@ export interface UpdateCoinDto {
 
 class StrategyService {
   async getCoins(): Promise<StrategyCoin[]> {
-    const response = await api.get<StrategyCoin[]>('/coins');
+    const response = await api.get<StrategyCoin[]>('/strategy-coins');
     return response.data;
   }
 
   async getCoin(id: string): Promise<StrategyCoin> {
-    const response = await api.get<StrategyCoin>(`/coins/${id}`);
+    const response = await api.get<StrategyCoin>(`/strategy-coins/${id}`);
     return response.data;
   }
 
   async createCoin(data: CreateCoinDto): Promise<StrategyCoin> {
-    const response = await api.post<StrategyCoin>('/coins', data);
+    const response = await api.post<StrategyCoin>('/strategy-coins', data);
     return response.data;
   }
 
   async updateCoin(id: string, data: UpdateCoinDto): Promise<StrategyCoin> {
-    const response = await api.put<StrategyCoin>(`/coins/${id}`, data);
+    const response = await api.put<StrategyCoin>(`/strategy-coins/${id}`, data);
     return response.data;
   }
 
   async deleteCoin(id: string): Promise<void> {
-    await api.delete(`/coins/${id}`);
+    await api.delete(`/strategy-coins/${id}`);
   }
 }
 

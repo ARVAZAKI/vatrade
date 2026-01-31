@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCoinDto } from './dto/create-coin.dto';
 import { UpdateCoinDto } from './dto/update-coin.dto';
 
-@Controller('coins')
+@Controller('strategy-coins')
 @UseGuards(JwtAuthGuard)
 export class StrategiesController {
   constructor(private readonly strategiesService: StrategiesService) {}

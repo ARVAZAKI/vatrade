@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Req, Param } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -19,6 +19,19 @@ import { UserResponseDto } from './dto/user-response.dto';
 @ApiBearerAuth('JWT-auth')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all users (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users list retrieved successfully',
+    type: [UserResponseDto],
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  async getAllUsers(@Req() req): Promise<UserResponseDto[]> {
+    // TODO: Add admin role guard
+    return this.usersService.findAll();
+  }
 
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
@@ -48,5 +61,22 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     return this.usersService.updateUser(req.user.sub, updateUserDto);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update any user (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    type: UserResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  async updateUserById(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
+    // TODO: Add admin role guard
+    return this.usersService.updateUser(id, updateUserDto);
   }
 }

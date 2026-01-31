@@ -8,9 +8,13 @@ import { UsersModule } from './users/users.module';
 import { UserCredentialsModule } from './user-credentials/user-credentials.module';
 import { BinanceModule } from './binance/binance.module';
 import { StrategiesModule } from './strategies/strategies.module';
+import { TradeHistoryModule } from './trade-history/trade-history.module';
+import { CoinsModule } from './coins/coins.module';
 import { User } from './users/user.entity';
 import { UserCredential } from './user-credentials/user-credential.entity';
 import { StrategyCoin } from './strategies/strategy-coin.entity';
+import { TradeHistory } from './trade-history/trade-history.entity';
+import { Coin } from './coins/coin.entity';
 
 @Module({
   imports: [
@@ -27,7 +31,7 @@ import { StrategyCoin } from './strategies/strategy-coin.entity';
         username: configService.get<string>('DATABASE_USER', 'postgres'),
         password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
         database: configService.get<string>('DATABASE_NAME', 'vatrade'),
-        entities: [User, UserCredential, StrategyCoin],
+        entities: [User, UserCredential, StrategyCoin, TradeHistory, Coin],
         synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
@@ -40,6 +44,8 @@ import { StrategyCoin } from './strategies/strategy-coin.entity';
     UserCredentialsModule,
     BinanceModule,
     StrategiesModule,
+    TradeHistoryModule,
+    CoinsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

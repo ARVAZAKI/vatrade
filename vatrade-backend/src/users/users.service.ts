@@ -21,6 +21,13 @@ export class UsersService {
     return user;
   }
 
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.usersRepository.find({
+      order: { createdAt: 'DESC' },
+    });
+    return users.map(user => this.toResponseDto(user));
+  }
+
   async getUserProfile(userId: string): Promise<UserResponseDto> {
     const user = await this.findById(userId);
     return this.toResponseDto(user);
@@ -43,6 +50,8 @@ export class UsersService {
     if (updateUserDto.name) user.name = updateUserDto.name;
     if (updateUserDto.email) user.email = updateUserDto.email;
     if (updateUserDto.phone !== undefined) user.phone = updateUserDto.phone;
+    if (updateUserDto.type) user.type = updateUserDto.type;
+    if (updateUserDto.role) user.role = updateUserDto.role;
 
     // Hash password if provided
     if (updateUserDto.password) {
